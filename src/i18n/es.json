@@ -1,0 +1,73 @@
+{
+  "translation": {
+    "nav": {
+      "quotation": "Cotizador",
+      "settings": "Configuración"
+    },
+    "quotation": {
+      "title": "Cotizador",
+      "jewelryCategory": "Categoría de Joya",
+      "name": "Nombre de Identificación",
+      "clientName": "Nombre del Cliente",
+      "metal": "Metal",
+      "resinType": "Tipo de Resina",
+      "manHours": "Horas de Trabajo",
+      "settingType": "Tipo de Engaste",
+      "finishes": "Acabados",
+      "addGemstone": "Añadir Gema",
+      "totalEstimation": "Estimación Total",
+      "calculate": "Calcular",
+      "metals": {
+        "gold": "Oro",
+        "silver": "Plata"
+      },
+      "categories": {
+        "rings": "Anillos",
+        "earrings": "Aretes",
+        "bracelets": "Pulseras",
+        "pendants": "Dijes"
+      },
+      "resins": {
+        "economy": "Resina Económica",
+        "premium": "Resina Premium"
+      },
+      "settings": {
+        "normal": "Engaste Normal",
+        "complex": "Engaste Complejo"
+      },
+      "finishesOptions": {
+        "platinum": "Platinado",
+        "rhodium": "Rodiado",
+        "sandblasting": "Arenado"
+      },
+      "gemstone": "Gema",
+      "carats": "Quilates",
+      "remove": "Eliminar"
+    },
+    "settings": {
+      "title": "Configuración de Valores Base",
+      "metals": "Metales (por gramo)",
+      "gold": "Oro",
+      "silver": "Plata",
+      "laborRates": "Sueldos (por hora)",
+      "design": "Diseño",
+      "modeling3D": "Modelado 3D",
+      "manual": "Trabajo manual - Pulida",
+      "consumables": "Consumibles",
+      "economyResin": "Resina Económica",
+      "premiumResin": "Resina Premium",
+      "finishes": "Acabados",
+      "platinum": "Platinado",
+      "rhodium": "Rodiado",
+      "sandblasting": "Arenado",
+      "settingCosts": "Costos de Engaste",
+      "normalSetting": "Engaste Normal",
+      "complexSetting": "Engaste Complejo",
+      "gemstones": "Gemas (por quilate)",
+      "addGemstone": "Añadir Gema Personalizada",
+      "gemName": "Nombre",
+      "gemPrice": "Precio por quilate",
+      "save": "Guardar"
+    }
+  }
+}

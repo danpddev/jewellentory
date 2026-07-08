@@ -1,0 +1,73 @@
+{
+  "translation": {
+    "nav": {
+      "quotation": "Quotation",
+      "settings": "Settings"
+    },
+    "quotation": {
+      "title": "Quotation Engine",
+      "jewelryCategory": "Jewelry Category",
+      "name": "Identification Name",
+      "clientName": "Client Name",
+      "metal": "Metal",
+      "resinType": "Resin Type",
+      "manHours": "Man Hours",
+      "settingType": "Setting Type",
+      "finishes": "Finishes",
+      "addGemstone": "Add Gemstone",
+      "totalEstimation": "Total Estimation",
+      "calculate": "Calculate",
+      "metals": {
+        "gold": "Gold",
+        "silver": "Silver"
+      },
+      "categories": {
+        "rings": "Rings",
+        "earrings": "Earrings",
+        "bracelets": "Bracelets",
+        "pendants": "Pendants"
+      },
+      "resins": {
+        "economy": "Economy Resin",
+        "premium": "Premium Resin"
+      },
+      "settings": {
+        "normal": "Normal Setting",
+        "complex": "Complex Setting"
+      },
+      "finishesOptions": {
+        "platinum": "Platinum Plating",
+        "rhodium": "Rhodium Plating",
+        "sandblasting": "Sandblasting"
+      },
+      "gemstone": "Gemstone",
+      "carats": "Carats",
+      "remove": "Remove"
+    },
+    "settings": {
+      "title": "Base Values Configuration",
+      "metals": "Metals (per gram)",
+      "gold": "Gold",
+      "silver": "Silver",
+      "laborRates": "Labor Rates (per hour)",
+      "design": "Design",
+      "modeling3D": "3D Modeling",
+      "manual": "Manual/Polishing",
+      "consumables": "Consumables",
+      "economyResin": "Economy Resin",
+      "premiumResin": "Premium Resin",
+      "finishes": "Finishes",
+      "platinum": "Platinum Plating",
+      "rhodium": "Rhodium Plating",
+      "sandblasting": "Sandblasting",
+      "settingCosts": "Setting Costs",
+      "normalSetting": "Normal Setting",
+      "complexSetting": "Complex Setting",
+      "gemstones": "Gemstones (per carat)",
+      "addGemstone": "Add Custom Gemstone",
+      "gemName": "Name",
+      "gemPrice": "Price per carat",
+      "save": "Save"
+    }
+  }
+}

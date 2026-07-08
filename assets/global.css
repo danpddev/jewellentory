@@ -1,0 +1,27 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+    .container {
+        @apply flex-1 max-w-none items-center justify-center p-6 gap-24 bg-black;
+    }
+    .container--client {
+        @apply gap-14 justify-start items-start pt-24 min-h-screen;
+    }
+    .container--sidepadding {
+        @apply gap-14 justify-start items-start pt-24 min-h-screen px-6;
+    }
+    .button__primary {
+        @apply bg-primary text-black;
+    }
+    .button__secondary {
+        @apply bg-gray text-white;
+    }
+}
+
+@layer utilities {
+    .bg-modal {
+        @apply bg-[rgba(0,0,0,0.5)];
+    }
+}
