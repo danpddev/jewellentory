@@ -2,57 +2,42 @@
 
 import { H4 } from '@expo/html-elements';
 import { createActionsheet } from '@gluestack-ui/core/actionsheet/creator';
-import {
-  Pressable,
-  View,
-  Text,
-  ScrollView,
-  VirtualizedList,
-  FlatList,
-  SectionList,
-  ViewStyle,
-} from 'react-native';
 import { PrimitiveIcon, UIIcon } from '@gluestack-ui/core/icon/creator';
-import { tva } from '@gluestack-ui/utils/nativewind-utils';
 import type { VariantProps } from '@gluestack-ui/utils/nativewind-utils';
-import { withStyleContext } from '@gluestack-ui/utils/nativewind-utils';
+import { tva, withStyleContext } from '@gluestack-ui/utils/nativewind-utils';
 import { cssInterop } from 'nativewind';
 import {
-  Motion,
-  AnimatePresence,
-  createMotionAnimatedComponent,
-  MotionComponentProps,
-} from '@legendapp/motion';
+  FlatList,
+  Pressable,
+  ScrollView,
+  SectionList,
+  Text,
+  View,
+  VirtualizedList
+} from 'react-native';
 
 import React from 'react';
 
-type IAnimatedPressableProps = React.ComponentProps<typeof Pressable> &
-  MotionComponentProps<typeof Pressable, ViewStyle, unknown, unknown, unknown>;
-
-const AnimatedPressable = createMotionAnimatedComponent(
-  Pressable
-) as React.ComponentType<IAnimatedPressableProps>;
-
-type IMotionViewProps = React.ComponentProps<typeof View> &
-  MotionComponentProps<typeof View, ViewStyle, unknown, unknown, unknown>;
-
-const MotionView = Motion.View as React.ComponentType<IMotionViewProps>;
+// Simple replacement for AnimatePresence that doesn't add animation delays
+const SimpleAnimatePresence: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  return <>{children}</>;
+};
 
 export const UIActionsheet = createActionsheet({
   Root: View,
-  Content: withStyleContext(MotionView),
+  Content: withStyleContext(View),
   Item: withStyleContext(Pressable),
   ItemText: Text,
   DragIndicator: View,
   IndicatorWrapper: View,
-  Backdrop: AnimatedPressable,
+  Backdrop: Pressable,
   ScrollView: ScrollView,
   VirtualizedList: VirtualizedList,
   FlatList: FlatList,
   SectionList: SectionList,
   SectionHeaderText: H4,
   Icon: UIIcon,
-  AnimatePresence: AnimatePresence,
+  AnimatePresence: SimpleAnimatePresence,
 });
 
 cssInterop(UIActionsheet, { className: 'style' });
@@ -97,10 +82,10 @@ cssInterop(PrimitiveIcon, {
   },
 });
 
-const actionsheetStyle = tva({ base: 'w-full h-full web:pointer-events-none' });
+const actionsheetStyle = tva({ base: 'w-full h-full web:pointer-events-none justify-end' });
 
 const actionsheetContentStyle = tva({
-  base: 'items-center rounded-tl-3xl rounded-tr-3xl p-2 bg-background-0 web:pointer-events-auto web:select-none shadow-lg pb-safe',
+  base: 'absolute bottom-0 left-0 right-0 items-center rounded-tl-3xl rounded-tr-3xl p-2 bg-background-0 web:pointer-events-auto web:select-none shadow-lg pb-safe',
 });
 
 const actionsheetItemStyle = tva({
@@ -150,7 +135,7 @@ const actionsheetDragIndicatorWrapperStyle = tva({
 });
 
 const actionsheetBackdropStyle = tva({
-  base: 'absolute left-0 top-0 right-0 bottom-0 bg-background-dark web:cursor-default web:pointer-events-auto',
+  base: 'absolute left-0 top-0 right-0 bottom-0 bg-background-dark opacity-50 web:cursor-default web:pointer-events-auto',
 });
 
 const actionsheetScrollViewStyle = tva({
@@ -546,17 +531,8 @@ const ActionsheetIcon = React.forwardRef<
 });
 
 export {
-  Actionsheet,
-  ActionsheetContent,
-  ActionsheetItem,
-  ActionsheetItemText,
-  ActionsheetDragIndicator,
-  ActionsheetDragIndicatorWrapper,
-  ActionsheetBackdrop,
-  ActionsheetScrollView,
-  ActionsheetVirtualizedList,
-  ActionsheetFlatList,
-  ActionsheetSectionList,
-  ActionsheetSectionHeaderText,
-  ActionsheetIcon,
+  Actionsheet, ActionsheetBackdrop, ActionsheetContent, ActionsheetDragIndicator,
+  ActionsheetDragIndicatorWrapper, ActionsheetFlatList, ActionsheetIcon, ActionsheetItem,
+  ActionsheetItemText, ActionsheetScrollView, ActionsheetSectionHeaderText, ActionsheetSectionList, ActionsheetVirtualizedList
 };
+
