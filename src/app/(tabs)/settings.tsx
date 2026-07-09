@@ -89,6 +89,13 @@ export default function SettingsScreen() {
             {renderInput(t('settings.complexSetting'), store.settings.complex, (v) => store.updateSetting('complex', v))}
           </Box>
 
+          {/* Profit */}
+          <Box>
+            <Heading size="md" color="#059669">{t('settings.profit')}</Heading>
+            <Divider my="$2" />
+            {renderInput(t('settings.markup'), store.profit.markup, (v) => store.updateProfit('markup', v))}
+          </Box>
+
           {/* Gemstones */}
           <Box>
             <Heading size="md" color="#059669">{t('settings.gemstones')}</Heading>

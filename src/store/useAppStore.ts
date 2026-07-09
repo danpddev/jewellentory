@@ -1,6 +1,6 @@
-import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { create } from 'zustand';
+import { createJSONStorage, persist } from 'zustand/middleware';
 
 export type Gemstone = {
   id: string;
@@ -14,14 +14,16 @@ export type AppState = {
   consumables: { economyResin: number; premiumResin: number };
   finishes: { platinum: number; rhodium: number; sandblasting: number };
   settings: { normal: number; complex: number };
+  profit: { markup: number };
   gemstones: Gemstone[];
-  
+
   // Actions
   updateMetal: (metal: keyof AppState['metals'], value: number) => void;
   updateLaborRate: (role: keyof AppState['laborRates'], value: number) => void;
   updateConsumable: (type: keyof AppState['consumables'], value: number) => void;
   updateFinish: (type: keyof AppState['finishes'], value: number) => void;
   updateSetting: (type: keyof AppState['settings'], value: number) => void;
+  updateProfit: (type: keyof AppState['profit'], value: number) => void;
   addGemstone: (gemstone: Gemstone) => void;
   updateGemstone: (id: string, pricePerCarat: number) => void;
   removeGemstone: (id: string) => void;
@@ -35,6 +37,7 @@ export const useAppStore = create<AppState>()(
       consumables: { economyResin: 2, premiumResin: 5 },
       finishes: { platinum: 50, rhodium: 40, sandblasting: 10 },
       settings: { normal: 5, complex: 15 },
+      profit: { markup: 30 },
       gemstones: [
         { id: '1', name: 'Diamante', pricePerCarat: 1000 },
         { id: '2', name: 'Esmeralda', pricePerCarat: 800 },
@@ -55,6 +58,8 @@ export const useAppStore = create<AppState>()(
         set((state) => ({ finishes: { ...state.finishes, [type]: value } })),
       updateSetting: (type, value) =>
         set((state) => ({ settings: { ...state.settings, [type]: value } })),
+      updateProfit: (type, value) =>
+        set((state) => ({ profit: { ...state.profit, [type]: value } })),
       addGemstone: (gemstone) =>
         set((state) => ({ gemstones: [...state.gemstones, gemstone] })),
       updateGemstone: (id, pricePerCarat) =>

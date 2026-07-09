@@ -17,7 +17,7 @@ import { ScrollView } from 'react-native';
 type SelectedGem = {
   id: string;
   gemId: string;
-  carats: number;
+  carats: string;
 };
 
 export default function QuotationScreen() {
@@ -47,7 +47,7 @@ export default function QuotationScreen() {
   }, [store.laborRates.design, store.laborRates.manual]);
 
   const addGemRow = () => {
-    setSelectedGems([...selectedGems, { id: Date.now().toString(), gemId: store.gemstones[0]?.id || '', carats: 1 }]);
+    setSelectedGems([...selectedGems, { id: Date.now().toString(), gemId: store.gemstones[0]?.id || '', carats: '1' }]);
   };
 
   const updateGemRow = (id: string, field: 'gemId' | 'carats', value: any) => {
@@ -86,11 +86,15 @@ export default function QuotationScreen() {
     if (useRhodium) total += store.finishes.rhodium;
     if (useSandblasting) total += store.finishes.sandblasting;
 
+    // Profit
+    const markup = store.profit.markup || 0;
+    total = total * (1 + markup / 100);
+
     // Gemstones
     selectedGems.forEach(g => {
       const gemDef = store.gemstones.find(x => x.id === g.gemId);
       if (gemDef) {
-        total += gemDef.pricePerCarat * g.carats;
+        total += gemDef.pricePerCarat * (parseFloat(g.carats) || 0);
       }
     });
 
@@ -175,7 +179,7 @@ export default function QuotationScreen() {
                   </SelectPortal>
                 </Select>
                 <Input variant="outline" size="md" flex={1}>
-                  <InputField placeholder={t('quotation.carats')} keyboardType="numeric" value={g.carats.toString()} onChangeText={(val) => updateGemRow(g.id, 'carats', parseFloat(val) || 0)} />
+                  <InputField placeholder={t('quotation.carats')} keyboardType="decimal-pad" value={g.carats} onChangeText={(val) => updateGemRow(g.id, 'carats', val)} />
                 </Input>
                 <Button size="sm" flex={0.3} action="negative" variant="outline" onPress={() => removeGemRow(g.id)}>
                   <ButtonIcon as={Trash} />

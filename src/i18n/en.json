@@ -61,6 +61,8 @@
       "rhodium": "Rhodium Plating",
       "sandblasting": "Sandblasting",
       "settingCosts": "Setting Costs",
+      "profit": "Profit Percentage",
+      "markup": "Markup Percentage",
       "normalSetting": "Normal Setting",
       "complexSetting": "Complex Setting",
       "gemstones": "Gemstones (per carat)",
