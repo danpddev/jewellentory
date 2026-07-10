@@ -41,6 +41,7 @@
         "sandblasting": "Arenado"
       },
       "gemstone": "Gema",
+      "gemNumber": "Gemas #",
       "carats": "Quilates",
       "remove": "Eliminar"
     },

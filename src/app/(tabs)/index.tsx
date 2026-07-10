@@ -3,13 +3,13 @@ import { Button, ButtonIcon, ButtonText } from '@/components/ui/button';
 import { Divider } from '@/components/ui/divider';
 import { Heading } from '@/components/ui/heading';
 import { HStack } from '@/components/ui/hstack';
-import { Input, InputField } from '@/components/ui/input';
+import { Input, InputField, InputIcon, InputSlot } from '@/components/ui/input';
 import { Select, SelectBackdrop, SelectContent, SelectInput, SelectItem, SelectPortal, SelectTrigger } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { useAppStore } from '@/src/store/useAppStore';
-import { Trash } from 'lucide-react-native';
+import { Hash, Trash, WeightTilde } from 'lucide-react-native';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollView } from 'react-native';
@@ -18,6 +18,7 @@ type SelectedGem = {
   id: string;
   gemId: string;
   carats: string;
+  gemNumber: string;
 };
 
 export default function QuotationScreen() {
@@ -47,15 +48,22 @@ export default function QuotationScreen() {
   }, [store.laborRates.design, store.laborRates.manual]);
 
   const addGemRow = () => {
-    setSelectedGems([...selectedGems, { id: Date.now().toString(), gemId: store.gemstones[0]?.id || '', carats: '1' }]);
+    setSelectedGems([...selectedGems, { id: Date.now().toString(), gemId: store.gemstones[0]?.id || '', carats: '1', gemNumber: '1' }]);
   };
 
-  const updateGemRow = (id: string, field: 'gemId' | 'carats', value: any) => {
+  const updateGemRow = (id: string, field: 'gemId' | 'carats' | 'gemNumber', value: any) => {
     setSelectedGems(selectedGems.map(g => g.id === id ? { ...g, [field]: value } : g));
   };
 
   const removeGemRow = (id: string) => {
     setSelectedGems(selectedGems.filter(g => g.id !== id));
+  };
+
+  const convertToCOPCurrency = (value: number) => {
+    return value.toLocaleString('es-CO', {
+      style: 'currency',
+      currency: 'COP',
+    });
   };
 
   const totalEstimation = useMemo(() => {
@@ -77,7 +85,7 @@ export default function QuotationScreen() {
     total += hours;
 
     // Settings
-    const stonesCount = selectedGems.length;
+    const stonesCount = selectedGems.map(g => parseInt(g.gemNumber) || 0).reduce((a, b) => a + b, 0);
     const settingCost = settingType === 'normal' ? store.settings.normal : store.settings.complex;
     total += stonesCount * settingCost;
 
@@ -93,8 +101,10 @@ export default function QuotationScreen() {
     // Gemstones
     selectedGems.forEach(g => {
       const gemDef = store.gemstones.find(x => x.id === g.gemId);
+      const gemNumber = parseInt(g.gemNumber) || 0;
+      const carats = parseFloat(g.carats) || 0;
       if (gemDef) {
-        total += gemDef.pricePerCarat * (parseFloat(g.carats) || 0);
+        total += gemDef.pricePerCarat * carats * gemNumber;
       }
     });
 
@@ -180,6 +190,15 @@ export default function QuotationScreen() {
                 </Select>
                 <Input variant="outline" size="md" flex={1}>
                   <InputField placeholder={t('quotation.carats')} keyboardType="decimal-pad" value={g.carats} onChangeText={(val) => updateGemRow(g.id, 'carats', val)} />
+                  <InputSlot className="pr-3">
+                    <InputIcon as={WeightTilde} />
+                  </InputSlot>
+                </Input>
+                <Input variant="outline" size="md" flex={1}>
+                  <InputField placeholder={t('quotation.gemNumber')} keyboardType="number-pad" value={g.gemNumber} onChangeText={(val) => updateGemRow(g.id, 'gemNumber', val)} />
+                  <InputSlot className="pr-3">
+                    <InputIcon as={Hash} />
+                  </InputSlot>
                 </Input>
                 <Button size="sm" flex={0.3} action="negative" variant="outline" onPress={() => removeGemRow(g.id)}>
                   <ButtonIcon as={Trash} />
@@ -260,7 +279,7 @@ export default function QuotationScreen() {
           <Box mt="$6" p="$4" bg="#059669" borderradius="$md">
             <VStack space="sm" alignitems="center">
               <Text color="white" size="md" bold>{t('quotation.totalEstimation')}</Text>
-              <Text color="white" size="3xl" bold>${totalEstimation.toFixed(2)}</Text>
+              <Text color="white" size="3xl" bold>{convertToCOPCurrency(totalEstimation)}</Text>
             </VStack>
           </Box>
           <Box h={40} />

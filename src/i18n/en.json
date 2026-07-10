@@ -41,6 +41,7 @@
         "sandblasting": "Sandblasting"
       },
       "gemstone": "Gemstone",
+      "gemNumber": "Gems #",
       "carats": "Carats",
       "remove": "Remove"
     },

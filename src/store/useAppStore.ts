@@ -6,6 +6,7 @@ export type Gemstone = {
   id: string;
   name: string;
   pricePerCarat: number;
+  gemNumber: number;
 };
 
 export type AppState = {
