@@ -6,7 +6,6 @@ export type Gemstone = {
   id: string;
   name: string;
   pricePerCarat: number;
-  gemNumber: number;
 };
 
 export type AppState = {
@@ -17,6 +16,12 @@ export type AppState = {
   settings: { normal: number; complex: number };
   profit: { markup: number };
   gemstones: Gemstone[];
+  quotation: {
+    merchantRegistration: string;
+    taxRate: string;
+    transport: string;
+    engraving: string;
+  };
 
   // Actions
   updateMetal: (metal: keyof AppState['metals'], value: number) => void;
@@ -25,6 +30,7 @@ export type AppState = {
   updateFinish: (type: keyof AppState['finishes'], value: number) => void;
   updateSetting: (type: keyof AppState['settings'], value: number) => void;
   updateProfit: (type: keyof AppState['profit'], value: number) => void;
+  updateQuotationSetting: (field: keyof AppState['quotation'], value: string) => void;
   addGemstone: (gemstone: Gemstone) => void;
   updateGemstone: (id: string, pricePerCarat: number) => void;
   removeGemstone: (id: string) => void;
@@ -39,6 +45,7 @@ export const useAppStore = create<AppState>()(
       finishes: { platinum: 50, rhodium: 40, sandblasting: 10 },
       settings: { normal: 5, complex: 15 },
       profit: { markup: 30 },
+      quotation: { merchantRegistration: '', taxRate: '0', transport: '0', engraving: '0' },
       gemstones: [
         { id: '1', name: 'Diamante', pricePerCarat: 1000 },
         { id: '2', name: 'Esmeralda', pricePerCarat: 800 },
@@ -61,6 +68,8 @@ export const useAppStore = create<AppState>()(
         set((state) => ({ settings: { ...state.settings, [type]: value } })),
       updateProfit: (type, value) =>
         set((state) => ({ profit: { ...state.profit, [type]: value } })),
+      updateQuotationSetting: (field, value) =>
+        set((state) => ({ quotation: { ...state.quotation, [field]: value } })),
       addGemstone: (gemstone) =>
         set((state) => ({ gemstones: [...state.gemstones, gemstone] })),
       updateGemstone: (id, pricePerCarat) =>

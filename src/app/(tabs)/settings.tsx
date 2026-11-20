@@ -43,10 +43,45 @@ export default function SettingsScreen() {
     </HStack>
   );
 
+  const renderQuotationInput = (field: 'taxRate' | 'transport' | 'engraving') => {
+    const label = t(`settings.quotation.${field}`);
+    return (
+      <HStack space="md" className="items-center justify-between py-2">
+        <Text size="sm" className="flex-1">{label}</Text>
+        <Input variant="outline" size="md" className="flex-1">
+          <InputField
+            aria-label={label}
+            keyboardType="decimal-pad"
+            value={store.quotation[field]}
+            onChangeText={(value) => store.updateQuotationSetting(field, value)}
+          />
+        </Input>
+      </HStack>
+    );
+  };
+
   return (
-    <ScrollView style={{ backgroundColor: '#F8F9FA' }}>
-      <Box className='px-6'>
+    <ScrollView style={{ backgroundColor: '#F8F9FA' }} keyboardShouldPersistTaps="handled">
+      <Box className="px-6 py-5">
         <VStack space="xl">
+          <VStack space="sm">
+            <Heading size="md" className="text-[#149749]">{t('settings.quotation.title')}</Heading>
+            <Divider />
+            <Text size="sm" bold>{t('settings.quotation.merchantRegistration')}</Text>
+            <Input variant="outline" size="md">
+              <InputField
+                aria-label={t('settings.quotation.merchantRegistration')}
+                autoCorrect={false}
+                maxLength={48}
+                value={store.quotation.merchantRegistration}
+                onChangeText={(value) => store.updateQuotationSetting('merchantRegistration', value)}
+              />
+            </Input>
+            {renderQuotationInput('taxRate')}
+            {renderQuotationInput('transport')}
+            {renderQuotationInput('engraving')}
+          </VStack>
+
           {/* Metals */}
           <Box>
             <Heading size="md" color="#059669">{t('settings.metals')}</Heading>

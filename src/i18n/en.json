@@ -7,16 +7,58 @@
     "quotation": {
       "title": "Quotation Engine",
       "jewelryCategory": "Jewelry Category",
-      "name": "Identification Name",
+      "name": "Name of the quoted item",
       "clientName": "Client Name",
       "metal": "Metal",
       "resinType": "Resin Type",
-      "manHours": "Man Hours",
+      "manHours": "Labor cost per piece",
       "settingType": "Setting Type",
       "finishes": "Finishes",
       "addGemstone": "Add Gemstone",
       "totalEstimation": "Total Estimation",
       "calculate": "Calculate",
+      "pieceQuantity": "Number of pieces",
+      "weightPerPiece": "Grams per piece",
+      "gemsPerPiece": "Gemstones per piece",
+      "gemPricingMode": {
+        "carat": "By carat",
+        "manual": "Manual price"
+      },
+      "manualGemName": "Stone name (optional)",
+      "manualGemPrice": "Price per stone (COP)",
+      "settingPerPiece": "Estimated setting cost per piece",
+      "genericPiece": "Jewelry piece",
+      "exportPdf": "Generate and share PDF",
+      "savePdf": "Save as PDF",
+      "exporting": "Preparing PDF…",
+      "errors": {
+        "missingClient": "Enter the client name to generate the quotation.",
+        "missingRegistration": "Enter the commercial registration number in Settings.",
+        "invalidAmounts": "Check the weight, quantities, stone prices, and your prices in Settings.",
+        "exportFailed": "The PDF could not be opened. Try again."
+      },
+      "pdf": {
+        "title": "Quotation",
+        "client": "Client",
+        "merchant": "Sole proprietor · Commercial registration {{registration}}",
+        "folio": "Quote no.",
+        "date": "Issue date · {{date}}",
+        "description": "Description",
+        "quantity": "Quantity",
+        "unitPrice": "Unit price (COP)",
+        "subtotal": "Subtotal (COP)",
+        "metalDetail": "{{metal}}. Includes labor, stone setting, polishing, transport, taxes and selected finishes where applicable.",
+        "stoneDetail": "{{carats}} ct per stone · {{count}} per piece",
+        "manualStoneDetail": "{{count}} per piece",
+        "piecesSubtotal": "Pieces subtotal",
+        "gemsSubtotal": "Gemstones subtotal",
+        "total": "Total due",
+        "finishes": "Finishes and services",
+        "yes": "Yes",
+        "no": "No",
+        "validity": "Valid for 30 calendar days.",
+        "expiry": "Expires on {{date}}."
+      },
       "metals": {
         "gold": "Gold",
         "silver": "Silver"
@@ -38,14 +80,22 @@
       "finishesOptions": {
         "platinum": "Platinum Plating",
         "rhodium": "Rhodium Plating",
+        "engraving": "Laser engraving",
         "sandblasting": "Sandblasting"
       },
       "gemstone": "Gemstone",
-      "gemNumber": "Gems #",
+      "gemNumber": "Quantity",
       "carats": "Carats",
       "remove": "Remove"
     },
     "settings": {
+      "quotation": {
+        "title": "Formal quotation",
+        "merchantRegistration": "Commercial registration number",
+        "taxRate": "Tax on jewelry piece (%)",
+        "transport": "Transport per piece (COP)",
+        "engraving": "Laser engraving per piece (COP)"
+      },
       "title": "Base Values Configuration",
       "metals": "Metals (per gram)",
       "gold": "Gold",

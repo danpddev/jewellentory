@@ -7,16 +7,58 @@
     "quotation": {
       "title": "Cotizador",
       "jewelryCategory": "Categoría de Joya",
-      "name": "Nombre de Identificación",
+      "name": "Nombre de la pieza cotizada",
       "clientName": "Nombre del Cliente",
       "metal": "Metal",
       "resinType": "Tipo de Resina",
-      "manHours": "Horas de Trabajo",
+      "manHours": "Mano de obra por pieza",
       "settingType": "Tipo de Engaste",
       "finishes": "Acabados",
       "addGemstone": "Añadir Gema",
       "totalEstimation": "Estimación Total",
       "calculate": "Calcular",
+      "pieceQuantity": "Cantidad de piezas",
+      "weightPerPiece": "Gramos por pieza",
+      "gemsPerPiece": "Piedras por pieza",
+      "gemPricingMode": {
+        "carat": "Por quilates",
+        "manual": "Precio manual"
+      },
+      "manualGemName": "Nombre de la piedra (opcional)",
+      "manualGemPrice": "Precio por piedra (COP)",
+      "settingPerPiece": "Engaste estimado por pieza",
+      "genericPiece": "Pieza de joyería",
+      "exportPdf": "Generar y compartir PDF",
+      "savePdf": "Guardar como PDF",
+      "exporting": "Preparando PDF…",
+      "errors": {
+        "missingClient": "Ingresa el nombre del cliente para generar la cotización.",
+        "missingRegistration": "Ingresa la matrícula mercantil en la pestaña Configuración.",
+        "invalidAmounts": "Revisa el peso, las cantidades, los precios de las piedras y los valores de Configuración.",
+        "exportFailed": "No se pudo abrir el PDF. Intenta de nuevo."
+      },
+      "pdf": {
+        "title": "Cotización",
+        "client": "Cliente",
+        "merchant": "Persona natural · Matrícula mercantil {{registration}}",
+        "folio": "Folio",
+        "date": "Fecha de emisión · {{date}}",
+        "description": "Descripción",
+        "quantity": "Cantidad",
+        "unitPrice": "Unitario (COP)",
+        "subtotal": "Subtotal (COP)",
+        "metalDetail": "{{metal}}. Incluye mano de obra, engaste, pulido, transporte, impuestos y acabados seleccionados, según aplique.",
+        "stoneDetail": "{{carats}} ct por piedra · {{count}} por pieza",
+        "manualStoneDetail": "{{count}} por pieza",
+        "piecesSubtotal": "Subtotal de piezas",
+        "gemsSubtotal": "Subtotal de piedras",
+        "total": "Total a pagar",
+        "finishes": "Acabados y servicios",
+        "yes": "Sí",
+        "no": "No",
+        "validity": "Válida por 30 días calendario.",
+        "expiry": "Vence el {{date}}."
+      },
       "metals": {
         "gold": "Oro",
         "silver": "Plata"
@@ -37,15 +79,23 @@
       },
       "finishesOptions": {
         "platinum": "Platinado",
-        "rhodium": "Rodiado",
+        "rhodium": "Rodinado",
+        "engraving": "Grabado láser",
         "sandblasting": "Arenado"
       },
       "gemstone": "Gema",
-      "gemNumber": "Gemas #",
+      "gemNumber": "Cantidad",
       "carats": "Quilates",
       "remove": "Eliminar"
     },
     "settings": {
+      "quotation": {
+        "title": "Cotización formal",
+        "merchantRegistration": "Matrícula mercantil",
+        "taxRate": "Impuesto sobre la pieza (%)",
+        "transport": "Transporte por pieza (COP)",
+        "engraving": "Grabado láser por pieza (COP)"
+      },
       "title": "Configuración de Valores Base",
       "metals": "Metales (por gramo)",
       "gold": "Oro",
