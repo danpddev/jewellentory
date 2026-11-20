@@ -3,44 +3,50 @@ import { Button, ButtonIcon, ButtonText } from '@/components/ui/button';
 import { Divider } from '@/components/ui/divider';
 import { Heading } from '@/components/ui/heading';
 import { HStack } from '@/components/ui/hstack';
-import { Input, InputField, InputIcon, InputSlot } from '@/components/ui/input';
+import { Input, InputField } from '@/components/ui/input';
 import { Select, SelectBackdrop, SelectContent, SelectInput, SelectItem, SelectPortal, SelectTrigger } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
+import { createQuotationHtml, quotationDates, type QuotationDocument } from '@/src/quotation/document';
+import { exportQuotationPdf } from '@/src/quotation/exportPdf';
+import { reserveQuotationFolio } from '@/src/quotation/folio';
+import { calculateQuotation, formatCop, type Finish, type SelectedGem } from '@/src/quotation/pricing';
 import { useAppStore } from '@/src/store/useAppStore';
-import { Hash, Trash, WeightTilde } from 'lucide-react-native';
-import { useEffect, useMemo, useState } from 'react';
+import { FileText, Trash } from 'lucide-react-native';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ScrollView } from 'react-native';
-
-type SelectedGem = {
-  id: string;
-  gemId: string;
-  carats: string;
-  gemNumber: string;
-};
+import { Platform, ScrollView } from 'react-native';
 
 export default function QuotationScreen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const store = useAppStore();
 
   const [category, setCategory] = useState('');
   const [name, setName] = useState('');
   const [clientName, setClientName] = useState('');
-  const [metal, setMetal] = useState('gold');
+  const [metal, setMetal] = useState<'gold' | 'silver'>('gold');
   const [metalWeight, setMetalWeight] = useState('1');
-  const [resinType, setResinType] = useState('economyResin');
+  const [pieceQuantity, setPieceQuantity] = useState('1');
+  const [resinType, setResinType] = useState<'economyResin' | 'premiumResin'>('economyResin');
   
   const defaultManHours = store.laborRates.design + store.laborRates.manual;
   const [manHours, setManHours] = useState(defaultManHours.toString());
   
-  const [settingType, setSettingType] = useState('normal');
-  const [usePlatinum, setUsePlatinum] = useState(false);
-  const [useRhodium, setUseRhodium] = useState(false);
-  const [useSandblasting, setUseSandblasting] = useState(false);
+  const [settingType, setSettingType] = useState<'normal' | 'complex'>('normal');
+  const [finishes, setFinishes] = useState<Record<Finish, boolean>>({
+    platinum: false,
+    rhodium: false,
+    engraving: false,
+    sandblasting: false,
+  });
 
   const [selectedGems, setSelectedGems] = useState<SelectedGem[]>([]);
+  const gemRowId = useRef(0);
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState('');
+  const exportInProgress = useRef(false);
+  const lastDocument = useRef<{ signature: string; folio: string } | null>(null);
 
   useEffect(() => {
     // Keep man hours updated if rates change and user hasn't edited (simplified)
@@ -48,74 +54,73 @@ export default function QuotationScreen() {
   }, [store.laborRates.design, store.laborRates.manual]);
 
   const addGemRow = () => {
-    setSelectedGems([...selectedGems, { id: Date.now().toString(), gemId: store.gemstones[0]?.id || '', carats: '1', gemNumber: '1' }]);
+    const gem: SelectedGem = {
+      id: String(++gemRowId.current),
+      gemId: store.gemstones[0]?.id ?? '',
+      carats: '1',
+      gemNumber: '1',
+    };
+    setSelectedGems((rows) => [...rows, gem]);
   };
 
-  const updateGemRow = (id: string, field: 'gemId' | 'carats' | 'gemNumber', value: any) => {
-    setSelectedGems(selectedGems.map(g => g.id === id ? { ...g, [field]: value } : g));
+  const updateGemRow = (id: string, changes: Partial<Omit<SelectedGem, 'id'>>) => {
+    setSelectedGems((rows) => rows.map((gem) => gem.id === id ? { ...gem, ...changes } : gem));
   };
 
   const removeGemRow = (id: string) => {
-    setSelectedGems(selectedGems.filter(g => g.id !== id));
+    setSelectedGems((rows) => rows.filter((gem) => gem.id !== id));
   };
 
-  const convertToCOPCurrency = (value: number) => {
-    return value.toLocaleString('es-CO', {
-      style: 'currency',
-      currency: 'COP',
-    });
-  };
+  const pricing = calculateQuotation(store, {
+    metal, metalWeight, pieceQuantity, laborCost: manHours, resinType, settingType, finishes, selectedGems,
+  });
 
-  const totalEstimation = useMemo(() => {
-    let total = 0;
-    
-    // Metal
-    const weight = parseFloat(metalWeight) || 0;
-    const metalPrice = metal === 'gold' ? store.metals.gold : store.metals.silver;
-    total += weight * metalPrice;
+  async function handleExport() {
+    if (exportInProgress.current) return;
+    const registration = store.quotation.merchantRegistration.trim();
+    if (!clientName.trim() || !registration || !pricing.valid) {
+      const error = !clientName.trim()
+        ? 'missingClient'
+        : !registration ? 'missingRegistration' : 'invalidAmounts';
+      setExportError(error);
+      return;
+    }
 
-    // Resin
-    total += resinType === 'economyResin' ? store.consumables.economyResin : store.consumables.premiumResin;
-
-    // Labor
-    const hours = parseFloat(manHours) || 0;
-    // Assuming manHours is the quantity of hours, or is it a flat value? 
-    // Wait, the requirement says "sum of preconfigured Design and Polishing rates". We treat it as flat or rate? 
-    // We treat it as flat value if the user enters the total labor cost, or we multiply by hours.
-    total += hours;
-
-    // Settings
-    const stonesCount = selectedGems.map(g => parseInt(g.gemNumber) || 0).reduce((a, b) => a + b, 0);
-    const settingCost = settingType === 'normal' ? store.settings.normal : store.settings.complex;
-    total += stonesCount * settingCost;
-
-    // Finishes
-    if (usePlatinum) total += store.finishes.platinum;
-    if (useRhodium) total += store.finishes.rhodium;
-    if (useSandblasting) total += store.finishes.sandblasting;
-
-    // Profit
-    const markup = store.profit.markup || 0;
-    total = total * (1 + markup / 100);
-
-    // Gemstones
-    selectedGems.forEach(g => {
-      const gemDef = store.gemstones.find(x => x.id === g.gemId);
-      const gemNumber = parseInt(g.gemNumber) || 0;
-      const carats = parseFloat(g.carats) || 0;
-      if (gemDef) {
-        total += gemDef.pricePerCarat * carats * gemNumber;
+    exportInProgress.current = true;
+    setExporting(true);
+    setExportError('');
+    try {
+      const now = new Date();
+      const locale = i18n.resolvedLanguage === 'es' ? 'es-CO' : 'en';
+      const quote: QuotationDocument = {
+        clientName: clientName.trim(),
+        merchantRegistration: registration,
+        pieceName: name.trim() || (category ? t(`quotation.categories.${category}`) : t('quotation.genericPiece')),
+        metalName: t(`quotation.metals.${metal}`),
+        finishes,
+        pricing,
+      };
+      const signature = JSON.stringify([locale, quotationDates(now).issued, quote]);
+      if (lastDocument.current?.signature !== signature) {
+        lastDocument.current = { signature, folio: await reserveQuotationFolio() };
       }
-    });
-
-    return total;
-  }, [store, metal, metalWeight, resinType, manHours, settingType, usePlatinum, useRhodium, useSandblasting, selectedGems]);
+      const { folio } = lastDocument.current;
+      const html = createQuotationHtml(quote, folio, now, locale, t);
+      await exportQuotationPdf(html, folio, t('quotation.exportPdf'));
+    } catch (error) {
+      console.warn('Quotation PDF export failed', error);
+      setExportError('exportFailed');
+    } finally {
+      exportInProgress.current = false;
+      setExporting(false);
+    }
+  }
 
   return (
-    <ScrollView style={{ backgroundColor: '#F8F9FA' }}>
-      <Box className='px-6'>
+    <ScrollView style={{ backgroundColor: '#F8F9FA' }} keyboardShouldPersistTaps="handled">
+      <Box className="px-6 py-5">
         <VStack space="xl">
-          <Heading size="xl" color="#059669">{t('quotation.title')}</Heading>
+          <Heading size="xl" className="text-[#149749]">{t('quotation.title')}</Heading>
           
           <VStack space="md">
             <Text size="sm" bold>{t('quotation.jewelryCategory')}</Text>
@@ -135,20 +140,27 @@ export default function QuotationScreen() {
             </Select>
 
             <Input variant="outline" size="md">
-              <InputField placeholder={t('quotation.name')} value={name} onChangeText={setName} />
+              <InputField aria-label={t('quotation.name')} placeholder={t('quotation.name')} maxLength={120} value={name} onChangeText={setName} />
             </Input>
 
             <Input variant="outline" size="md">
-              <InputField placeholder={t('quotation.clientName')} value={clientName} onChangeText={setClientName} />
+              <InputField aria-label={t('quotation.clientName')} placeholder={t('quotation.clientName')} maxLength={120} value={clientName} onChangeText={setClientName} />
             </Input>
+
+            <VStack space="xs">
+              <Text size="sm" bold>{t('quotation.pieceQuantity')}</Text>
+              <Input variant="outline" size="md">
+                <InputField aria-label={t('quotation.pieceQuantity')} keyboardType="number-pad" value={pieceQuantity} onChangeText={setPieceQuantity} />
+              </Input>
+            </VStack>
           </VStack>
 
-          <Divider my="$2" />
+          <Divider />
 
           <VStack space="md">
             <Text size="sm" bold>{t('quotation.metal')}</Text>
             <HStack space="md">
-              <Select flex={1} onValueChange={setMetal}>
+              <Select className="flex-1" onValueChange={(value) => setMetal(value as typeof metal)}>
                 <SelectTrigger variant="outline" size="md">
                   <SelectInput placeholder={t('quotation.metal')} value={t(`quotation.metals.${metal}`) || metal} />
                 </SelectTrigger>
@@ -160,68 +172,116 @@ export default function QuotationScreen() {
                   </SelectContent>
                 </SelectPortal>
               </Select>
-              <Input variant="outline" size="md" flex={1}>
-                <InputField placeholder="Gramos" keyboardType="numeric" value={metalWeight} onChangeText={setMetalWeight} />
+              <Input variant="outline" size="md" className="flex-1">
+                <InputField aria-label={t('quotation.weightPerPiece')} placeholder={t('quotation.weightPerPiece')} keyboardType="decimal-pad" value={metalWeight} onChangeText={setMetalWeight} />
               </Input>
             </HStack>
           </VStack>
 
-          <Divider my="$2" />
+          <Divider />
 
           <VStack space="md">
-            <VStack justifycontent="space-between" alignitems="center">
-              <Text size="sm" bold>{t('quotation.gemstone')}</Text>
-            </VStack>
+            <Text size="sm" bold>{t('quotation.gemsPerPiece')}</Text>
             
-            {selectedGems.map((g, index) => (
-              <HStack key={g.id} space="sm" alignitems="center">
-                <Select flex={2} onValueChange={(val) => updateGemRow(g.id, 'gemId', val)}>
-                  <SelectTrigger variant="outline" size="md">
-                    <SelectInput placeholder="Gema" value={store.gemstones.find(x => x.id === g.gemId)?.name || ''} />
-                  </SelectTrigger>
-                  <SelectPortal>
-                    <SelectBackdrop />
-                    <SelectContent>
-                      {store.gemstones.map(gem => (
-                        <SelectItem key={gem.id} label={gem.name} value={gem.id} />
-                      ))}
-                    </SelectContent>
-                  </SelectPortal>
-                </Select>
-                <Input variant="outline" size="md" flex={1}>
-                  <InputField placeholder={t('quotation.carats')} keyboardType="decimal-pad" value={g.carats} onChangeText={(val) => updateGemRow(g.id, 'carats', val)} />
-                  <InputSlot className="pr-3">
-                    <InputIcon as={WeightTilde} />
-                  </InputSlot>
-                </Input>
-                <Input variant="outline" size="md" flex={1}>
-                  <InputField placeholder={t('quotation.gemNumber')} keyboardType="number-pad" value={g.gemNumber} onChangeText={(val) => updateGemRow(g.id, 'gemNumber', val)} />
-                  <InputSlot className="pr-3">
-                    <InputIcon as={Hash} />
-                  </InputSlot>
-                </Input>
-                <Button size="sm" flex={0.3} action="negative" variant="outline" onPress={() => removeGemRow(g.id)}>
-                  <ButtonIcon as={Trash} />
-                </Button>
-              </HStack>
-            ))}
-            <VStack justifycontent="space-between" alignitems="center">
-              <Button size="sm" onPress={addGemRow} bg="#d1b82a">
-                <ButtonText>{t('quotation.addGemstone')}</ButtonText>
-              </Button>
-            </VStack>
+            {selectedGems.map((gem) => {
+              const pricingMode = gem.pricingMode ?? 'carat';
+              const manual = pricingMode === 'manual';
+              const amountLabel = t(manual ? 'quotation.manualGemPrice' : 'quotation.carats');
+              const quantityLabel = t('quotation.gemNumber');
+              return (
+                <VStack key={gem.id} space="sm" className="rounded-lg border border-outline-200 bg-white p-3">
+                  <HStack space="sm" className="items-center">
+                    {(['carat', 'manual'] as const).map((mode) => {
+                      const selected = mode === pricingMode;
+                      return (
+                        <Button
+                          key={mode}
+                          size="sm"
+                          variant={selected ? 'solid' : 'outline'}
+                          className={selected ? 'flex-1 bg-[#17683a] px-2' : 'flex-1 border-[#149749] px-2'}
+                          accessibilityState={{ selected }}
+                          onPress={() => updateGemRow(gem.id, { pricingMode: mode })}
+                        >
+                          <ButtonText className={selected ? 'text-white' : 'text-[#17683a]'}>
+                            {t(`quotation.gemPricingMode.${mode}`)}
+                          </ButtonText>
+                        </Button>
+                      );
+                    })}
+                    <Button size="sm" accessibilityLabel={t('quotation.remove')} className="px-2" action="negative" variant="outline" onPress={() => removeGemRow(gem.id)}>
+                      <ButtonIcon as={Trash} />
+                    </Button>
+                  </HStack>
+
+                  {manual ? (
+                    <Input variant="outline" size="md">
+                      <InputField
+                        aria-label={t('quotation.manualGemName')}
+                        placeholder={t('quotation.manualGemName')}
+                        value={gem.manualName ?? ''}
+                        maxLength={120}
+                        onChangeText={(value) => updateGemRow(gem.id, { manualName: value })}
+                      />
+                    </Input>
+                  ) : (
+                    <Select selectedValue={gem.gemId} onValueChange={(gemId) => updateGemRow(gem.id, { gemId })}>
+                      <SelectTrigger variant="outline" size="md">
+                        <SelectInput placeholder={t('quotation.gemstone')} value={store.gemstones.find((entry) => entry.id === gem.gemId)?.name ?? ''} />
+                      </SelectTrigger>
+                      <SelectPortal>
+                        <SelectBackdrop />
+                        <SelectContent>
+                          {store.gemstones.map((entry) => (
+                            <SelectItem key={entry.id} label={entry.name} value={entry.id} />
+                          ))}
+                        </SelectContent>
+                      </SelectPortal>
+                    </Select>
+                  )}
+
+                  <HStack space="sm" className="items-end">
+                    <VStack space="xs" className="flex-[2]">
+                      <Text size="xs">{amountLabel}</Text>
+                      <Input variant="outline" size="md">
+                        <InputField
+                          key={pricingMode}
+                          aria-label={amountLabel}
+                          keyboardType="decimal-pad"
+                          value={manual ? gem.manualUnitPrice ?? '' : gem.carats}
+                          onChangeText={(value) => updateGemRow(gem.id, manual ? { manualUnitPrice: value } : { carats: value })}
+                        />
+                      </Input>
+                    </VStack>
+                    <VStack space="xs" className="flex-1">
+                      <Text size="xs">{quantityLabel}</Text>
+                      <Input variant="outline" size="md">
+                        <InputField
+                          aria-label={quantityLabel}
+                          keyboardType="number-pad"
+                          value={gem.gemNumber}
+                          onChangeText={(gemNumber) => updateGemRow(gem.id, { gemNumber })}
+                        />
+                      </Input>
+                    </VStack>
+                  </HStack>
+                </VStack>
+              );
+            })}
+            <Button size="sm" variant="outline" className="self-start border-[#149749]" onPress={addGemRow}>
+              <ButtonText className="text-[#17683a]">{t('quotation.addGemstone')}</ButtonText>
+            </Button>
             {selectedGems.length > 0 && (
-              <Text size="xs" color="$textLight500">
-                Costo de engaste estimado: ${selectedGems.length * (settingType === 'normal' ? store.settings.normal : store.settings.complex)}
+              <Text size="xs">
+                {t('quotation.settingPerPiece')} {formatCop(Math.round(pricing.settingCost * 100))}
               </Text>
             )}
           </VStack>
 
-          <Divider my="$2" />
+          <Divider />
 
           <VStack space="md">
             <Text size="sm" bold>{t('quotation.resinType')}</Text>
-            <Select onValueChange={setResinType}>
+            <Select onValueChange={(value) => setResinType(value as typeof resinType)}>
               <SelectTrigger variant="outline" size="md">
                 <SelectInput placeholder={t('quotation.resinType')} value={t(`quotation.resins.${resinType.replace('Resin', '')}`) || resinType} />
               </SelectTrigger>
@@ -238,13 +298,13 @@ export default function QuotationScreen() {
           <VStack space="md">
             <Text size="sm" bold>{t('quotation.manHours')} ($)</Text>
             <Input variant="outline" size="md">
-              <InputField keyboardType="numeric" value={manHours} onChangeText={setManHours} />
+              <InputField aria-label={t('quotation.manHours')} keyboardType="decimal-pad" value={manHours} onChangeText={setManHours} />
             </Input>
           </VStack>
 
           <VStack space="md">
             <Text size="sm" bold>{t('quotation.settingType')}</Text>
-            <Select onValueChange={setSettingType}>
+            <Select onValueChange={(value) => setSettingType(value as typeof settingType)}>
               <SelectTrigger variant="outline" size="md">
                 <SelectInput placeholder={t('quotation.settingType')} value={t(`quotation.settings.${settingType}`) || settingType} />
               </SelectTrigger>
@@ -258,31 +318,49 @@ export default function QuotationScreen() {
             </Select>
           </VStack>
 
-          <Divider my="$2" />
+          <Divider />
 
           <VStack space="md">
             <Text size="sm" bold>{t('quotation.finishes')}</Text>
-            <HStack justifycontent="space-between" alignitems="center">
-              <Text size="sm">{t('quotation.finishesOptions.platinum')}</Text>
-              <Switch size="sm" value={usePlatinum} onValueChange={setUsePlatinum} />
-            </HStack>
-            <HStack justifycontent="space-between" alignitems="center">
-              <Text size="sm">{t('quotation.finishesOptions.rhodium')}</Text>
-              <Switch size="sm" value={useRhodium} onValueChange={setUseRhodium} />
-            </HStack>
-            <HStack justifycontent="space-between" alignitems="center">
-              <Text size="sm">{t('quotation.finishesOptions.sandblasting')}</Text>
-              <Switch size="sm" value={useSandblasting} onValueChange={setUseSandblasting} />
-            </HStack>
+            {(Object.keys(finishes) as Finish[]).map((finish) => {
+              const label = t(`quotation.finishesOptions.${finish}`);
+              return (
+                <HStack key={finish} className="items-center justify-between">
+                  <Text size="sm">{label}</Text>
+                  <Switch
+                    accessibilityLabel={label}
+                    size="sm"
+                    value={finishes[finish]}
+                    onValueChange={(enabled) => setFinishes((values) => ({ ...values, [finish]: enabled }))}
+                  />
+                </HStack>
+              );
+            })}
           </VStack>
 
-          <Box mt="$6" p="$4" bg="#059669" borderradius="$md">
-            <VStack space="sm" alignitems="center">
-              <Text color="white" size="md" bold>{t('quotation.totalEstimation')}</Text>
-              <Text color="white" size="3xl" bold>{convertToCOPCurrency(totalEstimation)}</Text>
+          <VStack space="md">
+            <VStack space="xs" className="rounded-lg border-l-4 border-[#D4CA30] bg-[#353838] p-4">
+              <HStack className="justify-between" space="sm">
+                <Text size="sm" className="text-white">{t('quotation.pdf.piecesSubtotal')}</Text>
+                <Text size="sm" className="text-white">{formatCop(pricing.metalSubtotalCents)}</Text>
+              </HStack>
+              <HStack className="justify-between" space="sm">
+                <Text size="sm" className="text-white">{t('quotation.pdf.gemsSubtotal')}</Text>
+                <Text size="sm" className="text-white">{formatCop(pricing.gemSubtotalCents)}</Text>
+              </HStack>
+              <Text size="sm" bold className="mt-2 text-white">{t('quotation.pdf.total')}</Text>
+              <Text size="2xl" bold className="text-white">{formatCop(pricing.totalCents)}</Text>
             </VStack>
-          </Box>
-          <Box h={40} />
+            <Button className="bg-[#17683a]" onPress={handleExport} isDisabled={exporting}>
+              <ButtonIcon as={FileText} />
+              <ButtonText>{t(exporting ? 'quotation.exporting' : Platform.OS === 'web' ? 'quotation.savePdf' : 'quotation.exportPdf')}</ButtonText>
+            </Button>
+            {exportError ? (
+              <Text accessibilityLiveRegion="polite" size="sm" className="text-red-700">
+                {t(`quotation.errors.${exportError}`)}
+              </Text>
+            ) : null}
+          </VStack>
         </VStack>
       </Box>
     </ScrollView>
